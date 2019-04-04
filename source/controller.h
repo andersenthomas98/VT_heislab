@@ -1,5 +1,5 @@
 #pragma once
-
+#include "elev.h"
 /** 
 * @file 
 * @brief Module for control and interface of the elevator. 
@@ -7,7 +7,7 @@
 
 
 
-typedef enum elevator_states {IDLE, RUN, WAIT, STOP, INIT} State;
+typedef enum elevator_states {IDLE, RUN, WAIT, STOP, INIT} State; 
 
 typedef struct elevator {
 	State state;
@@ -15,6 +15,7 @@ typedef struct elevator {
 	int orderQueue[10]; // 10 different btns
 	unsigned int currentOrder;
 	int stopBtn;
+	elev_motor_direction_t dir;
 	//int queueSize = 0;
 	//int *orderQueue = malloc(queueSize * sizeof(int)); // Burde kanskje bruke en liste med uspesifisert lengde, malloc osv...(???)
 } Elev;
@@ -61,3 +62,5 @@ void controller_updateLights(Elev *elev);
 
 
 void controller_btn_listener(Elev *elev);
+
+void controller_turn_off_lights(void);
