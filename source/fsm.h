@@ -33,5 +33,9 @@ New state: IDLE / RUN (depending on if there is another order)
 */
 void fsm_wait_seq(Elev *elev);
 
-// TODO
-//void fsm_update_orderQueue(Elev *elev);
+
+void fsm_update_currentOrder(Elev *elev);
+
+int fsm_is_orderQueue_empty(Elev *elev);
+
+void fsm_update_dir(Elev *elev);

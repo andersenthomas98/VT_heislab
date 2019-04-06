@@ -16,8 +16,9 @@ typedef struct elevator {
 	unsigned int currentOrder;
 	int stopBtn;
 	elev_motor_direction_t dir;
-	//int queueSize = 0;
-	//int *orderQueue = malloc(queueSize * sizeof(int)); // Burde kanskje bruke en liste med uspesifisert lengde, malloc osv...(???)
+	unsigned int numOrders;
+	int orderInFloor[4];
+	int prio_orderList[4];
 } Elev;
 
 
@@ -51,11 +52,6 @@ void controller_delay(unsigned int s, Elev *elev);
 */
 void controller_updateCurrentFloor(Elev *elev);
 
-/*
-* @brief Turn on all lights in floors that have been ordered
-* @param elev Elev struct
-*/
-void controller_updateOrderLights(Elev *elev);
 
 
 void controller_updateLights(Elev *elev);
@@ -64,3 +60,5 @@ void controller_updateLights(Elev *elev);
 void controller_btn_listener(Elev *elev);
 
 void controller_turn_off_lights(void);
+
+int controller_arrivedToFloor(void);

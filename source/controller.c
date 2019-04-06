@@ -10,28 +10,41 @@
 void controller_run(Elev *elev) {
 	fsm_init_seq(elev);
 	while (1) {
+		//printf("currentOrder = %d\n", elev->currentOrder);
 		
+		for (int i=0; i<=3; i++) {
+			printf("%d, ", elev->prio_orderList[i]);
+		}
+		printf("\n");
+		
+
 		controller_checkStopBtn(elev);
 		controller_btn_listener(elev);
 		if (elev->state == STOP) {
 			fsm_stop_seq(elev);
-			printf("STOP\n");
+		//	printf("STOP\n");
 		}
 		else if (elev->state == IDLE) {
 			fsm_idle_seq(elev);
+		//	printf("IDLE\n");
 		}
 		else if (elev->state == RUN) {
 			fsm_run_seq(elev);
+		//	printf("RUN\n");
 
 		}
 		else if (elev->state == WAIT) {
 			fsm_wait_seq(elev);
+		//	printf("WAIT\n");
 		}
 	}
 }
 
 
 void controller_go_to(Elev *elev, int floor) {
+
+	controller_updateCurrentFloor(elev);
+
 	if (elev->state == INIT) {
 		while (elev_get_floor_sensor_signal() != floor) {
 			elev_set_motor_direction(DIRN_DOWN);
@@ -40,16 +53,19 @@ void controller_go_to(Elev *elev, int floor) {
 		elev->currentFloor = elev_get_floor_sensor_signal();
 	} else {
 		controller_updateCurrentFloor(elev);
-		if (floor == elev->currentFloor) {
+		if (floor == elev->currentFloor && floor == elev_get_floor_sensor_signal()) {
+			//printf("DIRN_STOP\n");
 			elev_set_motor_direction(DIRN_STOP);
 			elev->state = WAIT;
 			elev->dir = DIRN_STOP;
 		}
 		else if (floor < elev->currentFloor) {
+			//printf("DIRN_DOWN\n");
 			elev_set_motor_direction(DIRN_DOWN);
 			elev->dir = DIRN_DOWN;
 		}
 		else if (floor > elev->currentFloor) {
+			//printf("DIRN_UP\n");
 			elev_set_motor_direction(DIRN_UP);
 			elev->dir = DIRN_UP;
 		}
@@ -74,19 +90,12 @@ void controller_delay(unsigned int s, Elev *elev) {
 	}
 }
 
-int arrivedToFloor() {
-	if (elev_get_floor_sensor_signal() != -1) {
-		return 1;
-	}
-	return 0;
-}
-
 void controller_updateCurrentFloor(Elev *elev) { // including floor indicator lights
-	if (elev->currentFloor != elev_get_floor_sensor_signal()) {
-		if (elev->dir == DIRN_DOWN && arrivedToFloor()) {
+	if (elev->currentFloor != elev_get_floor_sensor_signal() && elev_get_floor_sensor_signal() != -1) {
+		if (elev->dir == DIRN_DOWN) {
 			elev->currentFloor = elev->currentFloor - 1;
 		}
-		else if (elev->dir == DIRN_UP && arrivedToFloor()) {
+		else if (elev->dir == DIRN_UP) {
 			elev->currentFloor = elev->currentFloor + 1;
 		}
 		elev_set_floor_indicator(elev->currentFloor);
@@ -94,8 +103,11 @@ void controller_updateCurrentFloor(Elev *elev) { // including floor indicator li
 }
 
 void controller_btn_listener(Elev *elev) {
+	// orderQueue = {BC0, BC1, BC2, BC3, BCU0, BCU1, BCU2, BCU3, BCD1, BCD2, BCD3}   
+	// elements in orderQueue equal TRUE (=1) when active (e.g BC0 = 1 when BUTTON_COMMAND for first floor has been pressed)
+	// when the order has been executed the element in the orderQueue is set to FALSE (=0)
+	
 	// Listen for btn press, and add to orderQueue if btn is pressed
-	// Kan dette gjøres på en annen måte?
 	for (int i=0; i<=3; i++) {
 		if (elev_get_button_signal(BUTTON_COMMAND, i)) {
 			elev->orderQueue[i] = 1;
@@ -138,14 +150,4 @@ void controller_turn_off_lights(void) {
 	}
 }
 
-/*
-void controller_updateOrderLights(Elev *elev) {
-	for (int i = 0; i <= 3; i++) {
-		elev_set_button_lamp(BUTTON_COMMAND, i, 0);  // Skru av alle lys
-	}
-	int n = sizeof(elev->orderQueue) / sizeof(int);  // Finner antall elementer i orderQueue.
-	for (int j = 0; j <= n; j++) {
-		elev_set_button_lamp(BUTTON_COMMAND, elev->orderQueue[j], 1); // Skru på lys for hver etasje som er med i orderQueue.
-	}
 
-}*/
